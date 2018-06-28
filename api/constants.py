@@ -1,0 +1,1 @@
+POSTGRES_ADAPTER = 'postgres'

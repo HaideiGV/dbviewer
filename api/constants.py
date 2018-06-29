@@ -1,1 +1,2 @@
 POSTGRES_ADAPTER = 'postgres'
+DB_QUERY_LIMIT = 10

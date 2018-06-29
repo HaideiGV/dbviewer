@@ -5,9 +5,10 @@ from django.core.cache import cache
 from django.http import (
     HttpResponse,
     Http404,
+    HttpResponseNotAllowed,
+    HttpResponseRedirect,
     HttpResponseBadRequest,
     JsonResponse,
-    HttpResponseRedirect,
 )
 
 from api.helpers import DB_MAP_CONNECTOR
@@ -19,20 +20,24 @@ def index(request):
 
 
 def init_connection(request):
+    if str(request.method).lower() != 'post':
+        return HttpResponseNotAllowed(['post'])
+
     data = json.loads(request.body)
 
-    adapter = data.pop('db_adapter', None)
+    adapter = data.get('db_adapter', None)
     if not adapter:
         return Http404("db_adapter should be provided.")
 
-    is_connected = DB_MAP_CONNECTOR[adapter](**data)
+    conn = DB_MAP_CONNECTOR[adapter](**data)
 
     response = HttpResponse("Connection initialized.")
-    if is_connected:
+    if conn:
         user_cookie = uuid.uuid4().hex
         cache.set(user_cookie, data)
 
         response.set_cookie("auth", user_cookie)
+        conn.close()
 
     return response
 
